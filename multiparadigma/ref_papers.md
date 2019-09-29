@@ -21,6 +21,7 @@ semi-random stuff
 * Scala
   * mixin inheritance
 * family polymorphism: [https://www.researchgate.net/publication/213878848_Family_Polymorphism](https://www.researchgate.net/publication/213878848_Family_Polymorphism)
+* beta language: [https://beta.cs.au.dk](https://beta.cs.au.dk)
 * c++: Porkolab article: [https://www.researchgate.net/publication/267428476_A_generative_approach_for_family_polymorphism_in_C](https://www.researchgate.net/publication/267428476_A_generative_approach_for_family_polymorphism_in_C)
 * does other language support it ?
 
