@@ -3,3 +3,5 @@
 *.log
 *.pdf
 *.run.xml
+*.bbl
+*.blg
