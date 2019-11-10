@@ -4,11 +4,11 @@
 
 all: main.pdf
 
-main.pdf: main.tex
-	pdflatex --halt-on-error main
+main.pdf: main.tex ref.bib Makefile
+	pdflatex --halt-on-error -shell-escape main
 	biber main
-	pdflatex --halt-on-error main
-	pdflatex --halt-on-error main
+	pdflatex --halt-on-error -shell-escape main
+	pdflatex --halt-on-error -shell-escape main
 
 clean:
 	rm -f main.aux
@@ -18,3 +18,4 @@ clean:
 	rm -f main.run.xml
 	rm -f main.bbl
 	rm -f main.blg
+	rm -rf _minted-main/
