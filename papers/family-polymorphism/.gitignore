@@ -1,0 +1,14 @@
+*.aux
+*.bcf
+*.log
+*.pdf
+*.run.xml
+*.bbl
+*.blg
+*.nav
+*.out
+*.snm
+*.toc
+*.vrb
+_minted-main/*
+_minted-slides/*

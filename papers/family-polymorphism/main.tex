@@ -1,0 +1,536 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%2345678901234567890123456789012345678901234567890123456789012345678901234567890
+%        1         2         3         4         5         6         7         8
+
+\documentclass[a4paper, 10pt, conference ]{llncs}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{minted}
+\usepackage{xcolor}
+\usepackage{csquotes}
+
+
+
+\title{\LARGE \bf
+Explore Family polymorphism
+}
+
+
+\author{P\'eter K\'okai}
+\institute{E\"ot\"ovs Lor\'and University}
+
+
+\usepackage[backend=biber]{biblatex}
+\addbibresource{ref.bib}
+\let\cite\parencite
+
+
+\begin{document}
+
+
+
+\maketitle
+\thispagestyle{empty}
+\pagestyle{empty}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%TC:ignore
+\small \textbf{Keywords} polymorphism, family polymorphism
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Introduction}
+
+There are different type of polymorphism present, while there are a well known and commonly used type of polymorphism such as parametric, subtype or ad-hoc polymorphism, the research did not stop there. The aim of this paper is not to create a yet another polymorphism rather do a deep dive on the family polymorphism. This type of polymorphism was first mentioned by Erik Ernest expanding the BETA language into gBETA. The concept was later adapted by Scala as well.
+
+The examples mostly going to be using Scala programming language. This paper assumes the reader are familiar with Scala at basic level, and a few concepts will be explained only when required. For detailed overview of Scala check the following works\cite{odersky2004overview}\cite{nystrom2004scalable}.
+
+The next section is going to be an introduction to the currently dominating type of polymorphism, and basic building blocks that are used to create a family polymorphism including virtual classes, self-types.
+
+The 3rd section is finally introduces the main topic of this paper family polymorphism itself via problems that were partially already introduced in the first section. Providing a possibly sound solution.
+
+After that exploring the lightweight family polymorphism compared to family polymorphism.
+
+In the end one must speak and reason about the type system used by languages supporting family polymorphism such as gBETA or Scala.
+
+\section{Polymorphism}
+
+Among popular and relatively old languages such as Java, C++ or C\# it is possible to see a polymorphism is a key feature. The most common object-oriented languages provide subtyping, that is a well known type of polymorphism sometimes also referred as inclusion polymorphism. As its name suggest - inclusion - has other benefits of this mechanism is to share code, specifically avoid code duplication. Of course code duplication sometimes acceptable, still it is in the coders best interest to avoid it. Despite the subtyping popularity, that is only a type of polymorphism. Finding different types in the same language also not uncommon. Just as provided example for subtype polymorphism both Java and C++ has a means to provide a different way to achieve multiple forms. Just think of template metaprogramming or generic introduced in Java. Those provides a means to write generic function, code via a parametric polymorphism.
+
+\subsection{Ad-hoc polymorphism}
+
+It is possibly to provide a function or method with one name, but in reality refer to multiple implementation depending on the different type or number of arguments. This is also referred to in languages as function overloading or method overloading. Such an example is:
+
+\begin{minted}{cpp}
+#include <cmath>
+
+bool even(const int n) {
+  return 0 == n % 2;
+}
+
+bool even(const double n) {
+  return 0 == std::mod(n,2);
+}
+\end{minted}
+
+In this case the \emph{even} has two different implementation for different types, the dispatch is made in compile time therefore only the static types are checked. By using the same name has its own risk of producing unreadable code, but exploring readability issues is not a scope now.
+
+\subsection{Parametric polymorphism}
+
+In contrast with ad-hoc where the type could have completely different, the parametric polymorphism aim is to create one implementation that works with different types while still keep the type safety, as in the following example shows the static type is used to determine if the dispatching is possible.
+\begin{minted}{cpp}
+#include <cmath>
+
+template<typename Number>
+bool even(Number n) {
+   return 0 == std::fmod(n, 2);
+};
+\end{minted}
+
+In this example only one \emph{even} function can be seen, while the trick here is to use std::fmod that itself has an ad-hoc definition in C++. It is possible to provide an implementation without std::fmod, this was kept for because of its length.
+
+The \emph{Number} itself cannot be any type, as there is still a restriction as it requires the std::fmod to be implemented for that type. Those type of restriction could also be specified in c++ via concepts\cite{dos2006specifying}. The parametric polymorphism also known as in many languages as Generic programming, that approach was taken in Java or Scala.
+
+\subsection{Subtype polymorphism}
+
+The subtype describes a relation between two types, in fact if a S type is a subtype of T (in short S<:T), that means that using S instead of T should be transparent and safe to do\cite{liskov1988data}. This is usually referred as only polymorphism in OO languages, and used with combination of inheritance providing flexible design and help code reuse.
+
+Following the example before with implementing an \emph{even} function for numbers.
+
+\begin{minted}{cpp}
+class Number { };
+
+class Integer : public Number { };
+class Double : public Number { };
+
+
+bool even(Number n) {
+  return Number(0) == n.fmod(2);
+}
+\end{minted}
+
+Without providing the implementation details let's assume it is so Integer<:Number and Double<:Number are both true. The implementation of \emph{even} works for all S type that is subtype of the Number, and inherited from either Number or a type inherited from Number and still a subtype of Number. It is easy to confuse the inheritance with subtype in this example.
+
+\section{Additional techniques}
+
+\subsection{Virtual classes}
+
+The usage of virtual functions and method in object oriented languages are common, and well understood.
+
+In language like C++, the abstract class can be defined via creating a virtual function not providing implementation for those functions, thus forming a kind of interface for subclasses. Just like in the example with \emph{Number} the \emph{fmod} function must be either using virtual function or be one itself. Because the \emph{even} function has no knowledge about the exact type or name of that type that the field going to have in either its \emph{Integer} or \emph{Double}.
+
+While from \emph{Number} point of view it would be possible not to even hold any value in its subclasses. But the signature of the \emph{fmod} clearly states otherwise. The reader of such class not holding value could be surprised, as it would most likely seem unnatural.
+
+Of course solving such issue is possible with the combination of parametric polymorphism:
+\begin{minted}{cpp}
+template<typename Storage>
+class Number {
+  Storage value;
+};
+
+class Integer : public Number<int> {};
+class Double  : public Number<double> {};
+\end{minted}
+
+Even with extending the \emph{Number} with the \emph{value} without knowing all of its subclasses that finally specifies the \emph{Storage} it is impossible to do a full analysis on that class. The possibilities with the current sets of C++ stops at this point.
+
+Despite that C++ failed us in this example, by checking out the current sets of features. Specifically the virtual method calls.  The dynamic dispatching of the operation defined for objects only deals with the functions and methods, while the object itself contains also fields holding values, and defining their own set of operations. Those operation could in fact define their own set of operation, but the type of the fields are still limited to from the first parent in the inheritance chain. There is no way with using standard inheritance to further refine the type of the fields of the objects. In order to solve template related issues one should check out concepts\cite{dos2006specifying}. But that is not the topic that interested here.
+
+
+The simple idea is to extend objects with field that could hold a class as a value. The key difference between this and nested classes that nested classes are classes that tied to the inner class and those are not possible to modify dynamically, no late binding is possible. By allowing the class to be tied to the object itself makes it possible to defer type information into run-time. Additionally the objects are safe to store not only the class but also a subclass. This dynamic dispatching can be called as virtual classes.
+
+
+\section{Family polymorphism}
+
+The family polymorphism described here aims to scale the current polymorphism into the multi object, method level. Where multiple object and methods can be combined in a type safe manner.
+
+It is easy to mix up families just like the example with three person describes from the introduction of family polymorphism\cite{ernst2001family}:
+\begin{displayquote}
+The receptionist decides to get things going by asking a man "Are you a husband?" and asking a woman "Are you a wife?". Upon receiving two affirmative - though slightly baffled - answers, those two people are assigned to the same room, together with a little girl who said "Erm, yeah, and I'm a daughter!"
+\end{displayquote}
+
+Even if those people has those roles in a family, it does not necessarily means that they are part of the same one. Thus assigning them for the same room might not be the best idea. With the above idea let first just focus on the husband and wife as it is going to be an issue in case of two object, by allowing an additional third object only complicates the example and does not provide any solution. Just lets craft a husband, a wife and a room in Scala as follows:
+\begin{minted}{scala}
+class Husband { };
+
+class Wife { };
+
+class Room {
+  var husband: Husband = null;
+  var wife: Wife = null;
+
+  def assign_husband(h: Husband) : Room = {
+    husband = h;
+    this;
+  }
+  def assign_wife(w: Wife) : Room = {
+    wife = w;
+    this;
+  }
+};
+
+val husband = new Husband();
+val wife = new Wife();
+
+val room42 = new Room();
+
+room42.assign_husband(husband);
+room42.assign_wife(wife);
+\end{minted}
+There is nothing uncommon in that example, it does not even introduces the possibility of other husbands and wives. Still the wife and the husband can be considered to be part of the same family. Everything works as expected the family is in the \emph{room42} and happy.
+
+Mixing up things with only one room and one family is really hard. By introducing multiple rooms the situation still controllable as being in a different room might not be ideal but okay.
+
+The issue raises when a second family arrives, and now it is a father and a mother. This other family also consists of Husband and Wife, but they are clearly part of a different family as they have a child while the other family before them did not.
+\begin{minted}{scala}
+class Father extends Husband {
+  def has_child(): Boolean = true;
+};
+
+class Mother extends Wife {
+  def has_child(): Boolean = true;
+};
+
+val husband = new Husband();
+val wife = new Wife();
+
+val room42 = new Room();
+val room43 = new Room();
+
+room42.assign_husband(husband);
+room42.assign_wife(wife);
+
+val alsohusband = new Father();
+val alsowife = new Mother();
+
+assert(alsohusband.has_child);
+// This would not compile as the husbend
+// is just Husband end not a Father
+//assert(husband.has_child);
+
+room42.assign_husband(alsohusband);
+room42.assign_wife(wife);
+
+room43.assign_husband(husband);
+room43.assign_wife(alsowife);
+\end{minted}
+
+Just like anybody would expected from inheritance it is perfectly fine to assign the father and the wife into the same room, while that is clear that they are from a different family.
+
+It was shown in the original paper that it is possible to solve this kind of issues with the existing polymorphism, but there is no solution that both kept type safety and reusability. 
+Of course such a relationship between the families can be severed with not inheriting from the same base class, rendering the wife and the husband and the mother and the father irrelevant classes. Any object-oriented type system would detect those classes unrelated. Such a solution would solve the type safety, but would not allow reusability.
+The trial of such resolution could be checked in Ernst's paper\cite{ernst2001family}.
+
+
+The need to connect those objects that are part of the same family is needed. Both Java and C++ supports nested classes, in those languages the nested class itself does not solve the issue. The types of those classes would be the same just wrapped with an other class.
+
+The Scala example with nested classes:
+\begin{minted}{scala}
+class AbstractFamily {
+  class AbstractHusband { };
+  class AbstractWife { };
+};
+
+class Family extends AbstractFamily{
+   class YoungHusband extends AbstractHusband { };
+   class YoungWife    extends AbstractWife { };
+};
+
+class FamilyWithKids extends AbstractFamily {
+  class Father extends AbstractHusband {
+    def has_child(): Boolean = true;
+  };
+  class Mother extends AbstractWife {
+    def has_child(): Boolean = true;
+  };
+};
+
+class Room {
+  type AH = AbstractFamily#AbstractHusband;
+  type AW = AbstractFamily#AbstractHusband;
+
+  def assign_husband(h: ): Room = this;
+  def assign_wife(w: AW): Room = this;
+};
+
+
+val family = new Family();
+val marriedfamily = new FamilyWithKids();
+val room42 = new Room;
+
+val husband = new family.YoungHusband();
+val alsowife = new marriedfamily.Mother();
+
+room42.assign_husband(husband);
+room42.assign_wife(alsowife);
+\end{minted}
+
+This still works as effectively nothing change, only the classes get embedded into a class. But Father <: AbstractHusband still true.
+The solution would require that both FamilyWithKids <: AbstractFamily, Father <: AbstractHusband and Mother <: AbstractWife are true, and the same with Family <: AbstractFamily, YoungHusband <: AbstractHusband and YoungWife <: AbstractWife while mixing the YoungHusband and Mother or Father and YoungWife would not be possible.
+
+In Scala it is possible to include a type as a field of an object, those fields works effectively just like any other type name. Except they are bound to the object itself, and even two object with the same class having the same type as field when accessed via the objects are observed as different types, as the type system is path dependent. Therefore the objects are also part of the type name, causing different objects having different types.
+
+\subsection{Virtual type in scala}
+
+This field in scala is defined via the \emph{type} keyword. The type definition could be deferred for later classes simple not specifying the exact type, just like in this example shown:
+\begin{minted}{scala}
+abstract class AbsCell {
+  type T;
+  val init: T;
+
+  private var value: T = init;
+  def get: T = value;
+  def set(x: T): Unit = { value = x }
+}
+
+object cel extends AbsCell {
+  type T = Integer
+  val init = 14
+}
+
+cel.set(cel.init)
+println(cel.get);
+\end{minted}
+That abstract type later on in the inheritance chain could further refined and at some point of the chain the value (at least before instantiate) must be fixed. The further refinement is possible as non-, co-, and contra-variant:
+
+\begin{minted}{scala}
+C { type t = T }  // if t is declared non-variant,
+C { type t <: T } // if t is declared co-variant,
+C { type t >: T } // if t is declared contra-variant.
+\end{minted}
+
+\subsection{Family polymorphism in scala}
+
+The \emph{AbstractFamily} could be improved by providing not only AbstractHusband and AbstractWife but an abstract type for those pairs that are co-variant with their Abstract pair. 
+
+Check out only the differences in the class definition. The unchanged lines are emitted from the next example.
+
+\begin{minted}{scala}
+class AbstractFamily {
+  type Husband <: AbstractHusband
+  type Wife    <: AbstractWife
+  ...
+};
+
+class Family extends AbstractFamily{
+   type Husband = YoungHusband
+   type Wife    = YoungWife
+   ...
+};
+
+class FamilyWithKids extends AbstractFamily {
+  type Husband = Father
+  type Wife    = Mother
+  ...
+};
+
+abstract class Room {
+  type F <: AbstractFamily
+
+  def assign_husband(h: F#Husband): Room = this;
+  def assign_wife(w: F#Wife): Room = this;
+};
+\end{minted}
+
+With the following change changing the \emph{Room} so it could hold A family instead of members of a family. Please note that while the previous \emph{Room} implementation would still work the goal here is to only work within the same family. The path dependent types in the \emph{Room} now fixed once a family is fixed, and it is not possible to instantiate a non-fixed family.
+
+\begin{minted}{scala}
+val family = new Family();
+val husband = new family.Husband();
+val wife = new family.Wife();
+
+val room42 = new Room{type F = Family;};
+val room43 = new Room{type F = FamilyWithKids;};
+
+room42.assign_husband(husband);
+room42.assign_wife(wife);
+
+val marriedfamily = new FamilyWithKids();
+val alsohusband = new marriedfamily.Husband();
+val alsowife = new marriedfamily.Wife();
+
+room43.assign_husband(alsohusband);
+room43.assign_wife(alsowife);
+
+//Mixing families do not work
+//Does not compile
+room42.assign_husband(alsohusband);
+room42.assign_wife(alsowife);
+\end{minted}
+
+The solution presented here has some limitation compared to the original family polymorphism, that difference has impact on both the type system required and language features needed to implement. Before exploring that difference, let me share an other example, which does not suffer of such limitations. 
+
+\subsection{Original Graph example in gBETA}
+
+The introduction of family polymorphism was originally in gBETA\cite{ernst2000gbeta} language. The gBETA is an improved version of the BETA language. In the BETA language, classes and methods has been merged into a term patterns. The virtual method became virtual pattern, and with that virtual classes became possible. Compared to Scala, Java or even C++ the virtual methods in BETA/gBETA are not overridden by subclasses rather refined by the subclass implementation. The INNER keyword is used to refer to parent implementation.
+
+\begin{minted}{scala}
+(# Graph:
+  (# Node:<
+     (# touches:<
+     (# e: ^ Edge; b: @boolean
+     enter e[]
+     do (this(Node)=e.n1) or
+        (this(Node)=e.n2) -> b
+     exit b
+     #);
+     exit this(Node)[]
+     #);
+     Edge:<(# n1,n2: ^ Node exit this(Edge)[] #)
+  #);
+  OnOffGraph: Graph
+  (# Node::< (# touches::< 
+                !(# do
+                    (if e.enabled then INNER if)
+                  #)
+              #);
+     Edge::< (# enabled: @boolean #)
+  #);
+  build:
+  (# g:< @Graph; n: ^ g.Node;
+     e: ^ g.Edge; b: @boolean
+     enter (n[],e[],b)
+     do n->e.n1[]->e.n2[];
+     (if (e->n.touches)=b then ’OK’->putline if)
+  #);
+  g1: @Graph; g2: @OnOffGraph
+  do
+  (g1.Node,g1.Edge,true)->build(#g::@g1#);
+  (g2.Node,g2.Edge,false)->build(#g::@g2#);
+  (* compile error *)
+  (*(g2.Node,g1.Edge,false)->build(#g::@g1#);*)
+  (*(g2.Node,g1.Edge,false)->build(#g::@g2#);*)
+#)
+\end{minted}
+
+For the eyes that are unfamiliar with the gBETA/BETA syntax the following code describes Graph and OnOffGraph families. They both uses edge representation, and the OnOffGraph - as its name suggest - could switch its edges. Additionally implements a \emph{touches} method displaying \emph{OK} on the console if two \emph{Node} has an edge connecting them.
+
+The same could be written in Scala also. While in Scala it is not that compact as in gBETA, it maybe easier for the reader to understand what happens.
+
+\begin{minted}{scala}
+abstract class Graph {
+  type Node <: AbstractNode
+  type Edge <: AbstractEdge
+
+  def mkNode() : Node
+  def connect(n1: Node, n2: Node) : Edge
+
+  abstract class AbstractEdge(val n1: Node,
+                              val n2: Node)
+
+  trait AbstractNode {
+    def touches(edge: Edge): Boolean = {
+      edge.n1 == this || edge.n2 == this
+    }
+  }
+}
+
+class BasicGraph extends Graph {
+  type Node = BasicNode
+  type Edge = BasicEdge
+  protected class BasicNode extends AbstractNode
+  protected class BasicEdge(n1:Node,
+                            n2:Node)
+            extends AbstractEdge(n1, n2)
+
+  def mkNode() = new BasicNode
+  def connect(n1: Node, n2: Node) : BasicEdge = {
+    new BasicEdge(n1, n2)
+  }
+}
+
+
+class OnOffGraph extends Graph {
+  type Node = OnOffNode
+  type Edge = OnOffEdge
+  protected class OnOffNode extends AbstractNode {
+    override def touches(edge: Edge): Boolean = {
+      edge.enabled && super.touches(edge)
+    }
+  }
+  protected class OnOffEdge(n1:Node, n2:Node,
+                            var enabled: Boolean)
+            extends AbstractEdge(n1, n2)
+
+  def mkNode() = new OnOffNode
+  def connect(n1: Node, n2: Node) : OnOffEdge = {
+    new OnOffEdge(n1, n2, true)
+  }
+}
+
+
+val g = new BasicGraph
+val n1 = g.mkNode()
+val n2 = g.mkNode()
+val e = g.connect(n1, n2)
+assert(n1 touches e)
+assert(n2 touches e)
+val g2 = new BasicGraph
+//g2.connect(n1, n2) // Does not compile
+
+val og = new OnOffGraph
+val on1 = og.mkNode()
+val on2 = og.mkNode()
+val oe = og.connect(on1, on2)
+//ERROR: og.connect not applicable to g.Node
+//val mixed = og.connect(n1, n2)
+
+assert(on1 touches oe)
+assert(on2 touches oe)
+//ERROR: on2.touches not applicable to g.Edge
+// println(on2 touches e)
+oe.enabled = false;
+assert (! (on2 touches oe))
+assert (! (on1 touches oe))
+\end{minted}
+The graph Scala implementation was published in the following blog post\cite{scala-graph-family-poly-example}. That post also describes family polymorphism in details limited to Scala.
+
+Other examples that could illustrate the need for the family polymorphism are only mentioned here. These examples includes the Subscriber/Publisher described in the Scala overview\cite{odersky2004overview} and the extendable compiler\cite{odersky2005scalable}. The Subscribed/Publisher example is pattern used in many graphical applications.
+
+\section{Lightweight family polymorphism}
+
+The solution presented in gBETA yields a complex type system. There are \emph{vObj} or \emph{vc} describe later. Those type system could help proving the soundness of the original family polymorphism. The class of families could be achieved in a more relax way, while the type safety and the reusability is kept as desired. This is usually refereed as lightweight family polymorphism, it does not require for the objects to hold their own distinct type class rather allows classes to purely form families. Still nested classes are not enough to solve lightweight version. Just like the original family polymorphism it is possible to use it in Scala, in fact it is really easy to mix up them in Scala.
+
+An experienced Scala programmer could point out the example with families has such restriction because of how the \emph{Room} is crafted. It only referred to the family with the path \emph{class\#type\_field}, instead of using the object as type prefix.
+
+Relative path types
+
+\begin{minted}{scala}
+class Graph {
+  static class Node {};
+  static class Edge { .Node n1, n2; };
+};
+\end{minted}
+
+It is possible to reference to the Node as Graph.Node anywhere and that specify the exact type. Inside the family of Graph, it is also possible to refer the class of a family with a \emph{relative path type} emitting the \emph{Graph} and simply using \emph{.Node} while the \emph{Graph.Node} is called \emph{fully qualified path type}.
+
+Inheritance without subtyping.
+
+\begin{minted}{scala}
+class OnOffGraph extends Graph {
+  static class Node { };
+  static class Edge { };
+};
+\end{minted}
+
+This means that OnOffGraph.Node inherits all of the Graph.Node's properties still the OnOffGraph.Node is not a subclass of the Graph.Node.
+
+\section{Type system soundness}
+
+\subsection{vOjb}
+
+The concepts and type system of advanced languages like BETA, gBETA or Scala are far advanced a simple type calculus. There was a need to create a possible ways to reason about the soundness\cite{wright1994syntactic} of those patterns. There were several works that aim to provide such theory introducing embedded types within objects, classes describing nested structures, and using pattern as a general term for class, method, function.
+
+The vObj\cite{odersky2003nominal} were created to deal with dependent types. The vObj follows the BETA by defining the Class \= Method \= Functor, the same ideology of pattern instead of differentiating those. 
+
+\subsection{vc: virtual class calculus}
+
+The OO has concepts for virtual methods or functions, that has the ability to defer the decision which method should be called in run-time, as the method itself is dependent on the object and not the static type of the object(class). This provides a flexibility for the code owner to handle the object and not the class. The objects are not only sets of methods and functions, they also includes attributes. These attributes in most cases are statically typed and fixed at compile time. This restriction can be lifted in order to provide the same citizenship as for the methods, and it is called virtual classes. The virtual classes were implemented as virtual patterns in the BETA\cite{madsen1989virtual} language as well as in Ceaser\cite{aracic2006overview}. While BETA provides an implementation for the virtual classes, it was never proven that the type system is sound. There was a need to reason about virtual classes in order to prove its type system is complete, so a virtual class calculus\cite{ernst2006virtual} were created to deal with virtual classes. The paper both introduced static and dynamics of vc but also proved its soundness.
+
+
+\printbibliography
+
+\end{document}
+
