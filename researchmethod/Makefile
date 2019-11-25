@@ -1,6 +1,6 @@
 
 
-.PHONY: all clean
+.PHONY: all clean view
 
 all: main.pdf
 
@@ -9,6 +9,9 @@ main.pdf: main.tex ref.bib Makefile
 	biber main
 	pdflatex --halt-on-error -shell-escape main
 	pdflatex --halt-on-error -shell-escape main
+
+view: main.pdf
+	evince main.pdf
 
 clean:
 	rm -f main.aux
