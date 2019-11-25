@@ -2,14 +2,11 @@
 %2345678901234567890123456789012345678901234567890123456789012345678901234567890
 %        1         2         3         4         5         6         7         8
 
-\documentclass[letterpaper, 10 pt, conference]{IEEEtran}  % Comment this line out
+\documentclass[letterpaper, 10 pt, conference]{llncs}  % Comment this line out
                                                           % if you need a4paper
 %\documentclass[a4paper, 10pt, conference]{ieeeconf}      % Use this line for a4
                                                           % paper
 
-\IEEEoverridecommandlockouts                              % This command is only
-                                                          % needed if you want to
-                                                          % use the \thanks command
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage{minted}
@@ -50,6 +47,8 @@ The aim is to find possible ways for performance improvement in the sanitizer co
 \small \textbf{Keywords} LLVM, address sanitizer, asan, store-load instrument reduce
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
 \section{Introduction}
 
 The address sanitizer(ASAN) is one of the tool helping the developpers detecting memory related issues such as leak, use after lifespan or inproper memory access like buffer overflow. Those could effectivly lead not only crashing application, but even security issues. Even with exhaused testing those type of issues could be still hidden as favorable executions could work on process own memory and only strange not as expected. It is shown in many reaserch that combining a wide range of sanitizer could improve existing testing methods. Studies like combining with fuzzing\cite{alkazimi2016heartbleed}\cite{bohme2017directed}.
@@ -146,6 +145,12 @@ void d_memset(int *a, int value, int n) {
 In this case the goal is define exactly under which condition using the intervall check is correct, and which case it must instrument every operation.
 
 
+\section{Related works}
+\section{Concepts and problems}
+\section{Experiments}
+\section{Results}
+\section{Conclusion}
+\section{Future works}
 
 
 
@@ -174,11 +179,8 @@ TODO/draft/ignore:
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section*{APPENDIX}
 
-Appendixes should appear before the acknowledgment.
-
-\section*{ACKNOWLEDGMENT}
+\section*{Acknowledgment}
 
 
 
