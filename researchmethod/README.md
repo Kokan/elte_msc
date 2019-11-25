@@ -17,3 +17,5 @@ local/biber 1:2.13-1
     A Unicode-capable BibTeX replacement for biblatex users
 local/minted 2.5-1
     Syntax highlighted source code for LaTeX
+aur/latex-template-springer 20180122-1 (+16 0.31%) (Installed: 20191006-2)
+    Springer templates for LNCS proceedings (llncs), monographs (svmono), multiauthor volumes (svmult), journals (svjour3), and other lecture notes (svmultln)
