@@ -150,7 +150,18 @@ In this case the goal is define exactly under which condition using the interval
 
 The nice thing about LLVM that it can produce LLVM IR as a result, additionally it can parse it as an input as well. One could simply ask clang to emit llvm ir, and after that step simple re-execute all of those optimizers on top of it with opt.
 
-By checking the examples introduced in Concepts section, it is possibly to theorize if furthr investigation of this path could produce any of the expected improvements. Just as it would have been expected from such a trivial option, evaluating the same set of optimalization steps does not significantly further optimizes the result. As it is possible to let ASAN instrument via injecting a function call, or inline the content of the runtime cheking, this two possiblity could be checked. In the end it did not make any difference either way. The reoptimization could find some unused function and try to remove, or optimize some function call into a tail call. Those improvements are insignificant.
+By checking the examples above with the afformentioned idea it is possible to identify some change in the code itself. Examint further thoses changes, it is possible to clasify into three different section:
+\begin{itemize}
+ \item convert function to tail call
+ \item change the order from and, add, trunc to trunc, and, add
+ \item reverse the branch from true: error handling false: fast path
+\end{itemize}
+
+Depending on the decision that sanitizer makes (currently based on the number of instrumention it must take) it could either inject the code itself or just call a function. But either way as just the opt suggested converting those function calls by default tail call is a fine move.
+
+The benefit of working on a 8bit number instead of a 64bit can be doubtful on a 64 bit system, but can be appritiated on a 32 bit system.
+
+The change in the branch is intresting from the branch prediction point of view, the error handling branch performance does not concern us as it also going to terminate the application and only going to happen at most onece. While the fast path should be triggered all the time.
 
 \section{Results}
 \section{Conclusion}
