@@ -3,4 +3,4 @@ This is a repository mainly focusing on synchronising and keeping a backup of pr
 
 # 2019/2020 first semester
 
-* Functional programming [homeworks](funcprog/bead)
+* Functional programming [homeworks](funcprog/homework)
