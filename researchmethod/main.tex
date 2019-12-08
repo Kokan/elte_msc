@@ -8,6 +8,7 @@
 \usepackage[T1]{fontenc}
 \usepackage{minted}
 \usepackage{xcolor}
+\usepackage{graphicx}
 
 
 
@@ -64,56 +65,53 @@ The following sections are going to rely heavily on knowladge about LLVM\cite{la
 
 \section{Related works}
 
-The address sanitizer(ASAN) is one of the tool helping the developpers detecting memory related issues such as leak, use after lifespan or inproper memory access like buffer overflow. Those could effectivly lead not only crashing application, but even security issues. Even with exhaused testing those type of issues could be still hidden as favorable executions could work on process own memory and only strange not as expected. It is shown in many reaserch that combining a wide range of sanitizer could improve existing testing methods. Studies like combining with fuzzing\cite{alkazimi2016heartbleed}\cite{bohme2017directed}.
+\subsection{Sanitizers}
+The number of sanitizers are keep growing since the address\cite{serebryany2012addresssanitizer}, leak and memory\cite{stepanov2013memorysanitizer} sanitizer were introduced. There are undefiend behavior, thread, data flow and even hardware support exists for example Intel MPX\cite{oleksenko2018intel}. The application of the ASAN also reached multiple kernel implementation such as the linux kernel, in which there are some differences and called KSAN\cite{reshetova2018toward}. The kernel is the prime example where the common tools such as valgrind are impossible to use. By providing a provisioned binary makes it easier.
+
+\subsection{libFuzzer}
+The sanitizer mentioned before here were mostly changing the applications only when some type of violation were detected. Only changed the execution path in case of unsafe behavior, and it did not effect the base functionality of the software. The type of sanitizers do not stop there, there is one particular example called fuzzer. The libFuzzer is implemented as a sanitizer in LLVM/clang, and it is possible to combine with other sanitizers such as ASAN. The combination of libFuzzer and different sets of sanitizers could find security issues in no time. Such an example is the openssl heartbleed\cite{alkazimi2016heartbleed}\cite{bohme2017directed}.
 
 \section{Concepts and problems}
 
+Despite gcc also has sanitizer capability, it is more limited\cite{hytonen2018replacing}. Of course likely the concepts could be later applied for gcc. Now it is best to stick to clang here, and explore only that compiler extensation. The next section is going to explain how any sanitizer fits into the compilation stages of clang.
 
-Let us have a look on the proposed\cite{serebryany2012addresssanitizer} improvements. Starting with only one that is already implemented and used in the original measurements. In the following example it is easy to understood that multiple read/store access check is not required.
+\subsection{LLVM/Passes}
 
-\subsection{Incrementing variable}
+The clang could be divided into multiple subtasks that take part of transforming the source code into a machine binary. The clang itself heavily utilizes LLVM that has optimization, machine code generation support as well. The clang as a front end should only emit the LLVM IR - intermediate format used by LLVM to create an interface between subtasks. This can be seen in the Figure~\ref{fig:llvm-passes}. The important thing to notice here is the middle end - also exists as opt executable - that takes LLVM IR as an input, and produces the same type of output.
 
-\begin{minted}{c}
-void increment(int *a) {
- (*a)++;
-}
-\end{minted}
+The midle end is responsible for most of the transformation in the build system. While the transformation might not even transform anything at all, and generally called Pass. A Pass simply has access to the parsed LLVM IR, and it is free to make any type of transformation, or in some cases a Pass just reports information to the user. Such example is a Pass that reports information about all of the other Passes.
 
-Compiling the code with: clang -emit-llvm -S -O2
-\begin{minted}{c}
-define dso_local void @inc(i32* nocapture) #0 {
-  %2 = load i32, i32* %0, align 4
-  %3 = add nsw i32 %2, 1
-  store i32 %3, i32* %0, align 4
-  ret void
-}
-\end{minted}
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.5]{LLVM_Passes.png}
+\caption{LLVM/Passes}
+\label{fig:llvm-passes}
+\end{figure}
 
-Accessing the same address twice, once for reading from it and the next time to write the result. Therefore checking if the address is still not posined does not improve the detection. 
-Enabling the sanitizer: clang -emit-llvm -S -O2 -fsanitize=address -mllvm --asan-instrumentation-with-call-threshold=0\footnote{The sanitizer is forced to use function call instead of replacing instruments in order to fit the code into the page.}
+Of course as the passes operates on LLVM IR they are independent of the initial language. The passes can be grouped based on the scope they are working: global, function. Also based on the type of transformation they are doing like code optimalization. The optimalizations are also implemented as a Pass. The other important Pass that are already mentioned many time before are the sanitizers. While one sanitizer - like address - does not mean one Pass. It is also possible to define ordering and dependencies between Passes.
 
-\begin{minted}{c}
-define dso_local void @inc(i32* nocapture %a) #0 {
-entry:
-  %0 = ptrtoint i32* %a to i64
-  call void @__asan_load4(i64 %0)
-  %1 = load i32, i32* %a, align 4
-  %inc = add nsw i32 %1, 1
-  store i32 %inc, i32* %a, align 4
-  ret void
-}
-\end{minted}
+\subsection{Sanitizer as Pass}
 
-This works like expected, one could wonder the extense of this kind of checking. It is really easy to construct the following still very simple and similuar code:
+The address sanitizer is not different, it is implemented as a Pass, in fact it consists of multiple Passes. The address sanitizer must change any code that does store/load instruction and every scope with different lifetime due to function call, or simple block \{\}. By extending the code with the checks in ASAN would make the optimizer jobs really hard or in some cases impossible. Additionally the optimizer might decide to inline function, or remove memory accesses; surely those are not requires any error checking code from any sanitizer. Due to this the sanitizers are ordered in a way that they are executed as the last step. This ensures that the LLVM IR is seen by any sanitizer is as optimizedd as it can be with the current setup.
 
-\begin{minted}{c}
-void inc(int *a) {
-  int tmp = *a;
-  *a = tmp + 1;
-}
-\end{minted}
+\subsection{Reoptimize the code}
 
-But the result going to be very different:
+One could think that even if the LLVM IR the sanitizer starts to work on were initally optimized, currently as the sanitizer is the last one in the execution chain it would be up to the sanitizer to keep it optimized. Which is clearly not the task of any sanitizer, in fact sanitizer does the opposite than keeping the code optimized.
+
+It is easy to see that most likely after the sanitizer the results will not be keep its optimized quality. The simple idea is to use the 
+
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.5]{clang-opt-asan-opt.png}
+\caption{Optimize + ASAN + Optimize}
+\label{fig:opt-asan-opt}
+\end{figure}
+
+
+
+
+
 
 \begin{minted}{c}
 define dso_local void @inc(i32* nocapture %a) #0 {
@@ -129,11 +127,6 @@ entry:
 }
 \end{minted}
 
-Even with this simple example it is easy to see the limitation of the above example.
-
-\subsection{Instrument only array first and last access}
-
-In the next example store/load operation is done sequantially on an array. It is possible and currently every load/store operation is checked. There are cases where it is possible to use less check, just like in case of memset or memcpy. Those calls effectivly are replaced with a boundary check a[0] and a[n-1].
 \begin{minted}{c}
 void d_memset(int *a, int value, int n) {
   for (int i = 0; i < n; ++i) {
@@ -141,14 +134,13 @@ void d_memset(int *a, int value, int n) {
   }
 }
 \end{minted}
-In this case the goal is define exactly under which condition using the intervall check is correct, and which case it must instrument every operation.
 
 
 \section{Experiments}
 
 \subsection{Naiv approach}
 
-The nice thing about LLVM that it can produce LLVM IR as a result, additionally it can parse it as an input as well. One could simply ask clang to emit llvm ir, and after that step simple re-execute all of those optimizers on top of it with opt.
+The nice thing about LLVM that it can produce LLVM IR as a result, additionally it can parse it as an input as well. One could simply ask clang to emit LLVM IR, and after that step simple re-execute all of those optimizers on top of it with opt.
 
 By checking the examples above with the afformentioned idea it is possible to identify some change in the code itself. Examint further thoses changes, it is possible to clasify into three different section:
 \begin{itemize}
@@ -163,17 +155,40 @@ The benefit of working on a 8bit number instead of a 64bit can be doubtful on a 
 
 The change in the branch is intresting from the branch prediction point of view, the error handling branch performance does not concern us as it also going to terminate the application and only going to happen at most onece. While the fast path should be triggered all the time.
 
+\subsection{Phoronix Test Suite}
+
+The main focus of this work is on the performance of the resulting instrumented binaries, as a result different type of memories like heap or stack will not be investigated. Additionally the build time itself also not in focus, even thoue that is most likely going to increase. One could reason that the build time increase might do not worth the runtime speedup; as the ASAN is generally used during development and runtime, buildtime are both important.
+
+The phoronix test suite\cite{larabel2011phoronix} has a collection of different performance measurement tests. First of all the tests that are closed sourced, or not compiled are not selected for obviouse reasons. Secondly only the test that measure runtime are kept as the goal is to optimize for those.  Further such test that measure the compilation time instead of runtime are not in focus. Filtering out all of those tests provides us with the following tests:
+
+\begin{itemize}
+	\item TODO: list here all of the test that were choosen
+	\item PTS/sqlite (sql interaction)
+	\item PTS/cpp-perf-banch (compiler optimization like loop unroll etc)
+	\item 
+\end{itemize}
+
+
 \section{Results}
+
+\subsection{Compare clang and clang with ASAN}
+
+The comparision of clang and clang with ASAN execution is just in order to create a baseline.
+
+\subsection{Compare clang with ASAN and clang with ASAN and opt}
+
+T
+
+
 \section{Conclusion}
+
 \section{Future works}
 
 
-
-TODO/draft/ignore:
-* Implementation is LLVM/clang based (not gcc, but probably could be applied)
-* Reference the current implementation \cite{serebryany2012addresssanitizer} and how it works
-* Reference \cite{serebryany2012addresssanitizer} ideas from this feature section
-* Explain that current sanitizer is executed after optimizer (that gives a lot of gain without effort in sanitizer), explain why this section cannot be build as a simple optimization
+\begin{itemize}
+	\item Investigate the memory footprint (heap, stack)
+	\item Compare the sum of build and compile time (as usually this is used in CI, where both matters)
+\end{itemize}
 
 
 
