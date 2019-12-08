@@ -1,0 +1,24 @@
+llvm,
+
+"CppPerformanceBenchmarks9 - Test: Stepanov Vector",
+Lower Results Are Better
+
+"clang-sanitizer",87.488,86.36,85.553
+"clang",73.682,72.178,72.184
+
+"CppPerformanceBenchmarks9 - Test: Atol",
+Lower Results Are Better
+
+"clang-all",71.409,73.309,68.529,69.321,69.473
+
+"CppPerformanceBenchmarks9 - Test: Ctype",
+Lower Results Are Better
+
+"clang-all",32.978,32.006,31.846
+
+"CppPerformanceBenchmarks9 - Test: Math Library",
+Lower Results Are Better
+
+"clang-all",314.544,313.824,313.15
+
+
