@@ -9,6 +9,7 @@
 \usepackage{minted}
 \usepackage{xcolor}
 \usepackage{graphicx}
+\usepackage{pgfplots}
 
 
 
@@ -109,6 +110,7 @@ It is easy to see that most likely after the sanitizer the results will not be k
 \end{figure}
 
 
+Explore a simple example instrumenting the data stored on stack.
 
 
 
@@ -174,6 +176,31 @@ The phoronix test suite\cite{larabel2011phoronix} has a collection of different 
 \subsection{Compare clang and clang with ASAN}
 
 The comparision of clang and clang with ASAN execution is just in order to create a baseline.
+
+\begin{figure}
+\caption{Test: Stepanov Vector}
+\begin{tikzpicture}
+\begin{axis}[
+ylabel=\emph{Seconds},
+xlabel=\emph{years},
+legend style={at={(0.5,0.95)},
+ anchor=north,legend columns=-1},
+ybar,
+bar width=9pt,
+legend image code/.code={
+        \draw [#1] (0cm,-0.1cm) rectangle (0.2cm,0.25cm); },
+]
+
+\addplot [black!100!white,fill=black!100!white] coordinates {
+(1,73.682) (2,72.178) (3,72.184)
+};
+\addplot [black!30!white,fill=black!30!white] coordinates {
+(1,87.488) (2,86.36) (3,85.553)
+};
+\legend{clang,clang+ASAN}
+\end{axis}
+\end{tikzpicture}
+\end{figure}
 
 \subsection{Compare clang with ASAN and clang with ASAN and opt}
 
