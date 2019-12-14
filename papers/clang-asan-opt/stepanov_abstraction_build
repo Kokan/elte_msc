@@ -1,4 +1,17 @@
-~/src/llvm-project/build/bin/clang -O3 -S -emit-llvm -fsanitize=address -o stepanov_abstraction.ll stepanov_abstraction.cpp
-~/src/llvm-project/build/bin/opt -O3 -S stepanov_abstraction.ll -o stepanov_abstraction.opt.ll
-~/src/llvm-project/build/bin/llc -filetype=obj stepanov_abstraction.opt.ll -o stepanov_abstraction.o
-"/usr/bin/ld" "--eh-frame-hdr" "-m" "elf_x86_64" "-dynamic-linker" "/lib64/ld-linux-x86-64.so.2" "-o" "stepanov_abstraction" "/usr/lib64/gcc/x86_64-pc-linux-gnu/9.2.0/../../../../lib64/crt1.o" "/usr/lib64/gcc/x86_64-pc-linux-gnu/9.2.0/../../../../lib64/crti.o" "/usr/lib64/gcc/x86_64-pc-linux-gnu/9.2.0/crtbegin.o" "-L/usr/lib64/gcc/x86_64-pc-linux-gnu/9.2.0" "-L/usr/lib64/gcc/x86_64-pc-linux-gnu/9.2.0/../../../../lib64" "-L/lib/../lib64" "-L/usr/lib/../lib64" "-L/usr/lib64/gcc/x86_64-pc-linux-gnu/9.2.0/../../.." "-L/home/peterkokai/src/llvm-project/build/bin/../lib" "-L/lib" "-L/usr/lib" "--whole-archive" "/home/peterkokai/src/llvm-project/build/lib/clang/10.0.0/lib/linux/libclang_rt.asan-x86_64.a" "--no-whole-archive" "--dynamic-list=/home/peterkokai/src/llvm-project/build/lib/clang/10.0.0/lib/linux/libclang_rt.asan-x86_64.a.syms" "stepanov_abstraction.o" "--no-as-needed" "-lpthread" "-lrt" "-lm" "-ldl" "-lgcc" "--as-needed" "-lgcc_s" "--no-as-needed" "-lc" "-lgcc" "--as-needed" "-lgcc_s" "--no-as-needed" "/usr/lib64/gcc/x86_64-pc-linux-gnu/9.2.0/crtend.o" "/usr/lib64/gcc/x86_64-pc-linux-gnu/9.2.0/../../../../lib64/crtn.o"
+#!/bin/bash
+
+set -xe 
+
+
+NAME=$1
+USER=$(whoaim)
+
+NAME="${NAME%.*}"
+echo "Compiling ${NAME}"
+
+~/src/llvm-project/build/bin/clang++ -O3 -S -emit-llvm -fsanitize=address -o ${NAME}.ll ${NAME}.cpp
+~/src/llvm-project/build/bin/opt -O3 -S ${NAME}.ll -o ${NAME}.opt.ll
+~/src/llvm-project/build/bin/llc -filetype=obj ${NAME}.opt.ll -o ${NAME}.o
+"/usr/bin/ld" "--eh-frame-hdr" "-m" "elf_x86_64" "-dynamic-linker" "/lib64/ld-linux-x86-64.so.2" "-o" "${NAME}" "/usr/lib64/gcc/x86_64-pc-linux-gnu/9.2.0/../../../../lib64/crt1.o" "/usr/lib64/gcc/x86_64-pc-linux-gnu/9.2.0/../../../../lib64/crti.o" "/usr/lib64/gcc/x86_64-pc-linux-gnu/9.2.0/crtbegin.o" "-L/usr/lib64/gcc/x86_64-pc-linux-gnu/9.2.0" "-L/usr/lib64/gcc/x86_64-pc-linux-gnu/9.2.0/../../../../lib64" "-L/lib/../lib64" "-L/usr/lib/../lib64" "-L/usr/lib64/gcc/x86_64-pc-linux-gnu/9.2.0/../../.." "-L/home/${USER}/src/llvm-project/build/bin/../lib" "-L/lib" "-L/usr/lib" "--whole-archive" "/home/${USER}/src/llvm-project/build/lib/clang/10.0.0/lib/linux/libclang_rt.asan-x86_64.a" "--no-whole-archive" "--dynamic-list=/home/${USER}/src/llvm-project/build/lib/clang/10.0.0/lib/linux/libclang_rt.asan-x86_64.a.syms" "--whole-archive" "/home/${USER}/src/llvm-project/build/lib/clang/10.0.0/lib/linux/libclang_rt.asan_cxx-x86_64.a" "--no-whole-archive" "--dynamic-list=/home/${USER}/src/llvm-project/build/lib/clang/10.0.0/lib/linux/libclang_rt.asan_cxx-x86_64.a.syms" "${NAME}.o" "-lstdc++" "-lm" "--no-as-needed" "-lpthread" "-lrt" "-lm" "-ldl" "-lgcc_s" "-lgcc" "-lc" "-lgcc_s" "-lgcc" "/usr/lib64/gcc/x86_64-pc-linux-gnu/9.2.0/crtend.o" "/usr/lib64/gcc/x86_64-pc-linux-gnu/9.2.0/../../../../lib64/crtn.o"
+
+#"/usr/bin/ld" "--eh-frame-hdr" "-m" "elf_x86_64" "-dynamic-linker" "/lib64/ld-linux-x86-64.so.2" "-o" "${NAME}" "/usr/lib64/gcc/x86_64-pc-linux-gnu/9.2.0/../../../../lib64/crt1.o" "/usr/lib64/gcc/x86_64-pc-linux-gnu/9.2.0/../../../../lib64/crti.o" "/usr/lib64/gcc/x86_64-pc-linux-gnu/9.2.0/crtbegin.o" "-L/usr/lib64/gcc/x86_64-pc-linux-gnu/9.2.0" "-L/usr/lib64/gcc/x86_64-pc-linux-gnu/9.2.0/../../../../lib64" "-L/lib/../lib64" "-L/usr/lib/../lib64" "-L/usr/lib64/gcc/x86_64-pc-linux-gnu/9.2.0/../../.." "-L/home/${USER}/src/llvm-project/build/bin/../lib" "-L/lib" "-L/usr/lib" "--whole-archive" "/home/${USER}/src/llvm-project/build/lib/clang/10.0.0/lib/linux/libclang_rt.asan-x86_64.a" "--no-whole-archive" "--dynamic-list=/home/${USER}/src/llvm-project/build/lib/clang/10.0.0/lib/linux/libclang_rt.asan-x86_64.a.syms" "${NAME}.o" "--no-as-needed" "-lpthread" "-lrt" "-lm" "-ldl" "-lgcc" "--as-needed" "-lgcc_s" "--no-as-needed" "-lc" "-lgcc" "--as-needed" "-lgcc_s" "--no-as-needed" "/usr/lib64/gcc/x86_64-pc-linux-gnu/9.2.0/crtend.o" "/usr/lib64/gcc/x86_64-pc-linux-gnu/9.2.0/../../../../lib64/crtn.o"
