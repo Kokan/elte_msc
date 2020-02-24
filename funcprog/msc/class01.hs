@@ -5,6 +5,11 @@ eqBool a b = a == b
 class Eq' a where
   eq :: a -> a ->  Bool
 
+allSame :: Eq' a => [a] -> Bool
+allSame [] = True
+allSame x:[] = True
+allSame xs = (eq (head xs) (head (init xs))) && allSame (tail xs)
+
 instance Eq' Bool where
   eq = eqBool
 
@@ -30,5 +35,12 @@ showBinTree (Node a b) = "(" <> (show a) <> " " <> (show b) <> ")"
 
 instance Show a => Show (BinTree a) where
   show = showBinTree
+
+eqBinTree :: BinTree a -> BinTree a -> Bool
+eqBinTree _ _ = False
+
+instance Eq' a => Eq' (BinTree a) where
+   eq = eqBinTree
+
 
 
