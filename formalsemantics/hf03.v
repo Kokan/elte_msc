@@ -126,7 +126,7 @@ Fixpoint pred (n : Nat) : Nat :=
   | O => O
   | S n => n
   end.
-(*
+
 Lemma S_inj (a b : Nat) : S a = S b -> a = b.
 (* Use cong pred! *)
 Proof.
@@ -141,8 +141,26 @@ Definition P : Nat -> Prop := fun n =>
   | S _ => False
   end.
 
-Lemma O_S_O : ~ (S O <> O).
 
 Lemma O_S_disj (a : Nat) : O <> S a.
-*)
+Proof.
+  intros O. inversion O.
+Qed.
+
+Lemma zero_suc (a : Nat) : O <> S a.
+Proof.
+ assert (P O). {
+   simpl. trivial.
+ }
+ simpl.
+ unfold not.
+ intros.
+ (*discriminate H0.*)
+ rewrite H0 in H.
+ simpl in H.
+ (* apply H. *)
+ (* exact H. *)
+ assumption.
+Qed.
+
 
