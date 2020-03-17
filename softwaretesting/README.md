@@ -7,3 +7,5 @@ The assignemnt has multiple parts:
 
 [Specification](Specification.md)
 
+According to my teacher this task came up soo many times, I must come up with a different idea. I did not want to remove the old [old](OldSpecification.md).
+
