@@ -83,3 +83,37 @@ test('101 round, plant, corn', t => {
 	t.is(units.tto, 0);
 });
 
+test('one round, plant, tomato', t => {
+	units = garden.garden_plant_reap_and_collect( 1, [{ tto: 1 }] );
+	t.is(units.cot, 0);
+	t.is(units.crn, 0);
+	t.is(units.tto, 0);
+});
+
+test('two round, plant, tomato', t => {
+	units = garden.garden_plant_reap_and_collect( 2, [{ tto: 1 }] );
+	t.is(units.cot, 0);
+	t.is(units.crn, 0);
+	t.is(units.tto, 0);
+});
+
+test('three round, plant, tomato', t => {
+	units = garden.garden_plant_reap_and_collect( 3, [{ tto: 1 }] );
+	t.is(units.cot, 0);
+	t.is(units.crn, 0);
+	t.is(units.tto, 0);
+});
+
+test('four round, plant, tomato', t => {
+	units = garden.garden_plant_reap_and_collect( 4, [{ tto: 1 }] );
+	t.is(units.cot, 0);
+	t.is(units.crn, 0);
+	t.is(units.tto, 3);
+});
+
+test('101 round, plant, tomato', t => {
+	units = garden.garden_plant_reap_and_collect( 101, [{ tto: 1 }] );
+	t.is(units.cot, 0);
+	t.is(units.crn, 0);
+	t.is(units.tto, 75);
+});
