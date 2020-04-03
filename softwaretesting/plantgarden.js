@@ -10,9 +10,9 @@ module.exports.garden_plant_reap_and_collect = function(number_of_rounds, planti
   };
   };
 
-  if (number_of_rounds >= 2 && planting_decisions.length > 0 && planting_decisions[0].cot > 0) {
+  if (planting_decisions.length > 0 && planting_decisions[0].cot > 0) {
   return {
-    cot: 2,
+    cot: Math.floor(number_of_rounds/2)*2,
     crn: 0,
     tto: 0,
   };
