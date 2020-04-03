@@ -117,3 +117,10 @@ test('101 round, plant, tomato', t => {
 	t.is(units.crn, 0);
 	t.is(units.tto, 75);
 });
+
+test('37 round, plant, each', t => {
+	units = garden.garden_plant_reap_and_collect( 37, [{ tto: 1, cot: 3, crn: 5}] );
+	t.is(units.cot, 36);
+	t.is(units.crn, 49);
+	t.is(units.tto, 27);
+});
