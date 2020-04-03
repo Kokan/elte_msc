@@ -1,0 +1,14 @@
+{
+  "name": "plantgarden",
+  "version": "1.0.0",
+  "description": "Software testing assignement.",
+  "main": "index.js",
+  "author": "Kokan <kokaipeter@gmail.com>",
+  "license": "GPL-3.0",
+  "devDependencies": {
+    "ava": "^3.5.2"
+  },
+  "scripts": {
+    "test": "ava"
+  }
+}
