@@ -18,6 +18,14 @@ module.exports.garden_plant_reap_and_collect = function(number_of_rounds, planti
   };
   }
 
+  if (planting_decisions.length > 0 && planting_decisions[0].crn > 0) {
+  return {
+    cot: 0,
+    crn: Math.floor(number_of_rounds/5)*7,
+    tto: 0,
+  };
+  }
+
   return {
     cot: 0,
     crn: 0,
