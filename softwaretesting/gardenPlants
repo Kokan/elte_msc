@@ -1,0 +1,51 @@
+#!/usr/bin/env node
+
+const garden = require('./plantgarden');
+const assert = require('assert');
+
+
+function parse_command_line_args_to_plant_decision(argv)
+{
+
+function CRN(round, table)
+{
+   return {crn: table, round: round};
+}
+
+function COT(round, table)
+{
+   return {cot: table, round: round};
+}
+
+function TTO(round, table)
+{
+   return {tto: table, round: round};
+}
+
+return eval(process.argv.join(' ').replace(/(CRN|COT|TTO) (\d+) ([1-5])/g, "$1($2,$3)"));
+
+}
+
+function convert_to_planting_decision(iter, arr)
+{
+  var decisions = garden.create_plant_decision(iter);
+
+  arr.forEach( v => decisions[v.round-1].push(v) );
+
+  return decisions;
+}
+
+process.argv = process.argv.slice(2);
+
+
+number_of_rounds = process.argv.shift();
+assert(process.argv.length >= 2);
+
+var decisions = convert_to_planting_decision(number_of_rounds, parse_command_line_args_to_plant_decision(process.argv));
+
+units = garden.garden_plant_reap_and_collect(number_of_rounds, decisions);
+console.log( "Output: [COT "+units.cot+", CRN: "+units.crn+", TTO: "+units.tto+"]",  );
+
+
+
+
