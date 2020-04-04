@@ -1,5 +1,5 @@
-.v#
-.v.crashcoqide
+*.v#
+*.crashcoqide
 .aux
 .glob
 .vo

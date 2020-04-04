@@ -187,10 +187,10 @@ Qed.
 
 Lemma times_assoc (a b c : Nat) : (a * b) * c = a * (b * c).
 
-Lemma times_comm (a b : Nat) : a * b = b * a.
+(*Lemma times_comm (a b : Nat) : a * b = b * a.*)
 
 
-Lemma decEq (a b : Nat) : a = b \/ a <> b.
+(*Lemma decEq (a b : Nat) : a = b \/ a <> b.*)
 
 *)
 
@@ -239,6 +239,17 @@ Proof.
   - simpl. reflexivity.
   - simpl. rewrite <- IHt2. rewrite <- IHt1. rewrite (comm). reflexivity.
 Qed.
+
+
+Fixpoint exp2 (n : Nat) : Nat :=
+  match n with
+  | O => S O
+  | S m => exp2 m + exp2 m (* 2*2^m *)
+  end.
+
+Lemma leaves_height (t : BinaryTree) :
+  max (exp2 (height t)) (leaves_count t) =
+  exp2 (height t).
 
 
 
