@@ -33,3 +33,7 @@ module.exports.garden_plant_reap_and_collect = function(number_of_rounds, planti
   };
 }
 
+module.exports.create_plant_decision = function(n)
+{
+ return Array.from({length: n}, _ => new Object());
+}
