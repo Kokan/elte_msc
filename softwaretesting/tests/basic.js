@@ -90,7 +90,9 @@ test('five round, plant, corn', t => {
 });
 
 test('101 round, plant, corn', t => {
-	units = garden.garden_plant_reap_and_collect( 101, [{ crn: 1 }] );
+	decisions = garden.create_plant_decision(101);
+	decisions[0] = {crn: 1};
+	units = garden.garden_plant_reap_and_collect( 101, decisions );
 	t.is(units.cot, 0);
 	t.is(units.crn, 7);
 	t.is(units.tto, 0);
@@ -104,21 +106,23 @@ test('one round, plant, tomato', t => {
 });
 
 test('two round, plant, tomato', t => {
-	units = garden.garden_plant_reap_and_collect( 2, [{ tto: 1 }] );
+	units = garden.garden_plant_reap_and_collect( 2, [{ tto: 1 }, {}] );
 	t.is(units.cot, 0);
 	t.is(units.crn, 0);
 	t.is(units.tto, 0);
 });
 
 test('three round, plant, tomato', t => {
-	units = garden.garden_plant_reap_and_collect( 3, [{ tto: 1 }] );
+	units = garden.garden_plant_reap_and_collect( 3, [{ tto: 1 }, {}, {}] );
 	t.is(units.cot, 0);
 	t.is(units.crn, 0);
 	t.is(units.tto, 0);
 });
 
 test('four round, plant, tomato', t => {
-	units = garden.garden_plant_reap_and_collect( 4, [{ tto: 1 }] );
+	decisions = garden.create_plant_decision(4);
+	decisions[0] = {tto: 1};
+	units = garden.garden_plant_reap_and_collect( 4, decisions );
 	t.is(units.cot, 0);
 	t.is(units.crn, 0);
 	t.is(units.tto, 3);
@@ -144,7 +148,7 @@ test('37 round, plant, each', t => {
 
 test('37 round, plant carrot at round 37', t => {
 	decisions = garden.create_plant_decision(37);
-	decisions[37] = {cot: 5};
+	decisions[36] = {cot: 5};
 	units = garden.garden_plant_reap_and_collect( 37, decisions);
 	t.is(units.cot, 0);
 	t.is(units.crn, 0);
