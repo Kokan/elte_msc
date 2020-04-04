@@ -15,15 +15,15 @@ module.exports.garden_plant_reap_and_collect = function(number_of_rounds, planti
   var tto = 0;
 
   if (planting_decisions.length > 0 && planting_decisions[0].cot > 0) {
-    cot =  Math.floor(number_of_rounds/2)*2
+    if (number_of_rounds >= 2) cot += 2;
   }
 
   if (planting_decisions.length > 0 && planting_decisions[0].crn > 0) {
-    crn = Math.floor(number_of_rounds/5)*7
+    if (number_of_rounds >= 5) crn += 7;
   }
 
   if (planting_decisions.length > 0 && planting_decisions[0].tto > 0) {
-    tto = Math.floor(number_of_rounds/4)*3
+    if (number_of_rounds >= 4) tto += 3;
   }
 
   return {
