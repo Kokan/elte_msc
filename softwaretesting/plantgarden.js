@@ -39,6 +39,23 @@ function plant(garden, round_no, task)
   {
      garden[task.tto-1] = {plant: plant_tto, date: round_no };
   }
+
+  if (!!task.empty && task.empty > 0)
+  {
+     garden[task.empty-1] = {plant: plant_empty, date: round_no };
+  }
+}
+
+function bonus(plant1, plant2)
+{
+   const bonus_table = [
+      [  0,  0,  0,  0 ],
+      [  0, -1, +1, -1 ],
+      [  0, +1, -1, +2 ],
+      [  0, +2, +1, -1 ],
+   ];
+
+   return bonus_table[plant1][plant2];
 }
 
 function harvest(garden, round_no)
@@ -53,15 +70,21 @@ function harvest(garden, round_no)
   {
    case plant_cot:
      if (garden[i].date + 2 == round_no+1)
-        cot = 2;
+        cot += 2
+            +  ((i > 0) ? bonus(garden[i].plant, garden[i-1].plant) : 0)
+            +  ((i < 4) ? bonus(garden[i].plant, garden[i+1].plant) : 0);
    break;
    case plant_crn:
      if (garden[i].date + 5 == round_no+1)
-        crn = 7;
+        crn += 7
+            +  ((i > 0) ? bonus(garden[i].plant, garden[i-1].plant) : 0)
+            +  ((i < 4) ? bonus(garden[i].plant, garden[i+1].plant) : 0);
    break;
    case plant_tto:
      if (garden[i].date + 4 == round_no+1)
-        tto = 3;
+        tto += 3
+            +  ((i > 0) ? bonus(garden[i].plant, garden[i-1].plant) : 0)
+            +  ((i < 4) ? bonus(garden[i].plant, garden[i+1].plant) : 0);
    break;
   }
   }
@@ -71,6 +94,28 @@ function harvest(garden, round_no)
     crn: crn,
     tto: tto,
   };
+}
+
+function remove_dead_plant(garden, round_no)
+{
+  for (var i = 0; i < 5; ++i)
+  {
+  switch (garden[i].plant)
+  {
+   case plant_cot:
+     if (garden[i].date + 2 == round_no+1)
+        plant(garden, 0, {empty: i+1});
+   break;
+   case plant_crn:
+     if (garden[i].date + 5 == round_no+1)
+        plant(garden, 0, {empty: i+1});
+   break;
+   case plant_tto:
+     if (garden[i].date + 4 == round_no+1)
+        plant(garden, 0, {empty: i+1});
+   break;
+  }
+  }
 }
 
 module.exports.garden_plant_reap_and_collect = function(number_of_rounds, planting_decisions)
@@ -83,19 +128,22 @@ module.exports.garden_plant_reap_and_collect = function(number_of_rounds, planti
   var cot = 0;
   var crn = 0;
   var tto = 0;
-  garden = Array.from({length: 5}, _ => new Object({name: plant_empty, date: -1}))
+  garden = Array.from({length: 5}, _ => new Object({plant: plant_empty, date: -1}))
+
   for (var i = 0; i < number_of_rounds; ++i)
   {
-     if (!valid_task(planting_decisions[i]))
+     if (!planting_decisions.reduce( (acc, task) => acc = acc  && valid_task(task), true))
         return { error: true };
 
-     plant(garden, i, planting_decisions[i]);
+     planting_decisions[i].forEach( task => plant(garden, i, task));
 
      units = harvest(garden, i);
 
      cot += units.cot;
      crn += units.crn;
      tto += units.tto;
+
+     remove_dead_plant(garden, i);
   }
 
 
@@ -108,5 +156,5 @@ module.exports.garden_plant_reap_and_collect = function(number_of_rounds, planti
 
 module.exports.create_plant_decision = function(n)
 {
- return Array.from({length: n}, _ => new Object());
+ return Array.from({length: n}, _ => new Array(new Object()));
 }
