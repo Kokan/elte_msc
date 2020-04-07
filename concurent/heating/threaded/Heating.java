@@ -19,11 +19,42 @@ class Heating {
 		next[0][m/2] = current[0][m/2] = 100.0;     // middle of top row
 	}
 
-	public void step(){
-		for( int i=1; i<n-1; ++i ){
+	class Calculate extends Thread {
+		private final int index;
+		Calculate(int i) {
+			this.index = i;
+		}
+		@Override
+		public void run() {
 			for( int j=1; j<m-1; ++j ){
-				next[i][j] = current[i][j]*(1.0-4.0*r) + r*(current[i][j-1]+current[i][j+1]+current[i+1][j]+current[i-1][j]);
+				next[index][j] = calculate_point(index, j, current);
 			}
+			return;
+		}
+	};
+
+	public double calculate_point(int i, int j, double current[][]){
+		return current[i][j]*(1.0-4.0*r) + r*(current[i][j-1]+current[i][j+1]+current[i+1][j]+current[i-1][j]);
+	}
+
+	public void step(){
+		try {
+		Thread threads[] = new Thread[n];
+		final int thread_no = 20;
+		for( int i=1; i<n-1; i+=thread_no ){
+			//System.out.println("thread pool ");
+			for (int k = 1; k < thread_no-1 && i+k < n-1; ++k){
+				//System.out.println("thread " + (i+k-1));
+				threads[i+k-1] = new Calculate(i+k-1);
+				threads[i+k-1].start();
+			}
+			for (int k=1; k<thread_no-1 && i+k < n-1; ++k){
+				threads[i+k-1].join();
+			}
+			//System.out.println("thread pool end");
+		}
+		}
+		catch (InterruptedException ex) {
 		}
 		swap();
 	}
