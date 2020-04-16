@@ -40,11 +40,17 @@ class Heating {
 	public void step(){
 		try {
 		Thread threads[] = new Thread[n];
-		final int thread_no = 20;
+		final int thread_no = 5;
+		ScheduledExecutorService executor = Executors.newScheduledThreadPool(10);
 		for( int i=1; i<n-1; i+=thread_no ){
 			//System.out.println("thread pool ");
 			for (int k = 1; k < thread_no-1 && i+k < n-1; ++k){
 				//System.out.println("thread " + (i+k-1));
+				Callable<Double> callableTask = () -> {
+					return calculate_point(i, j, current);
+				};
+				Future<Double> future = executor.schedule(callableTask, 0, TimeUnit.MILLISECONDS);
+
 				threads[i+k-1] = new Calculate(i+k-1);
 				threads[i+k-1].start();
 			}
