@@ -1,0 +1,94 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%2345678901234567890123456789012345678901234567890123456789012345678901234567890
+%        1         2         3         4         5         6         7         8
+
+\documentclass[a4paper, 10pt, conference ]{llncs}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{minted}
+\usepackage{xcolor}
+\usepackage{csquotes}
+
+
+
+\title{\LARGE \bf
+Register allocation
+}
+
+
+\author{P\'eter K\'okai}
+\institute{E\"ot\"ovs Lor\'and University}
+
+
+\usepackage[backend=biber]{biblatex}
+\addbibresource{ref.bib}
+\let\cite\parencite
+
+
+\begin{document}
+
+
+
+\maketitle
+\thispagestyle{empty}
+\pagestyle{empty}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%TC:ignore
+\small \textbf{Keywords} llvm, mem2reg, register allocation
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Introduction}
+
+A CPU instructions normally do computations on memory, but the type of memory differs. The speed of different type of memory also has a huge significants on the performance of an application. A RAM can be considered as slow compared to the different level of caches and registers a processor has. It is fairly easy to convert a language to an \- likely not optimized \- instrction set. Usually a variable in a language can be kept in the memory and only stored in register once it needed for a computation, with this method the number of required registers are really low. This method invokes a lot of storing and loading from a slow memory, as such it greatly hurts the performance. While a CPU has usually a lot more register but still a limited. In order to gain performance the variables should be stored in register as long as they can be, most language do not limit on the number of variable that can be alive in the same time.
+
+As it turned out allocation registers are not an easy task\cite{chaitin1981register}, while it was shown that it is as complex as the n-graph coloring problem. Despite such a negative result, improving on the allocation could yield significant performance gain as such exploring a slighest improvment on register allocation worth the exploration.
+
+
+
+
+\section{Different algorithm}
+
+\subsection{Common expression used}
+
+\subsubsection{Spill}
+Spilling a variable means that instead of using a register, or the current variable in a register is stored into a not register memory like the stack.
+
+\subsection{Usage count}
+
+This method not also deals with register allocation, but additionally reduces the number of required calculation by remembering of already calculated data.
+
+A new variable is stored in a register if there is a free register, and removes if the variable is no longer needed. While keep a reference counter for each variable, when there is no more avaiable register the variable with the lowest counter is spilled.\cite{freiburghouse1974register}
+
+\subsection{Graph coloring}
+
+Nodes in the graph represent live ranges (variables, temporaries, virtual/symbolic registers) that are candidates for register allocation. Edges connect live ranges that interfere, i.e., live ranges that are simultaneously live at at least one program point. Register allocation then reduces to the graph coloring problem in which colors (registers) are assigned to the nodes such that two nodes connected by an edge do not receive the same color. If the graph is not colorable, some nodes are deleted from the graph until the reduced graph becomes colorable. The deleted nodes are said to be spilled because they are not assigned to registers. The basic goal of register allocation by graph coloring is to find a legal coloring after deleting the minimum number of nodes (or more precisely, after deleting a set of nodes with minimum total spill cost).\cite{chaitin1981register}\cite{poletto1999linear}
+
+\subsection{Linear scan}
+
+This algorithm has a benefits of being faster than graph coloring in compile time, resulting almost the same runtime speed.
+
+The number of overlapping intervals changes only at the start and end points of an interval. Live intervals are stored in a list that is sorted in order of increasing start point. Hence, the algorithm can quickly scan forward through the live intervals by skipping from one start point to the next.
+
+At each step, the algorithm maintains a list, active, of live intervals that overlap the current point and have been placed in registers. The active list is kept sorted in order of increasing end point. For each new interval, the algorithm scans active from beginning to end. It removes any “expired” intervals—those intervals that no longer overlap the new interval because their end point precedes the new interval’s start point—and makes the corresponding register available for allocation. Since active is sorted by increasing end point, the scan needs to touch exactly those elements that need to be removed, plus at most one: it can halt as soon as it reaches the end of active (in which case active remains empty) or encounters an
+interval whose end point follows the new interval’s start point.
+
+The length of the active list is at most R, given R number of registers. The worst case scenario is that active has length R at the start of a new interval and no intervals from active are expired.  In this situation, one of the current live intervals (from active or the new interval) must be spilled.\cite{poletto1999linear}
+
+\subsection{Puzzle solving}
+
+Foo\cite{quintao2008register}
+
+\subsection{Trace based}
+
+trae based\cite{eisl2016trace}
+
+
+
+\printbibliography
+
+\end{document}
+
